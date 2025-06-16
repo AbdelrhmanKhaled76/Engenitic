@@ -94,6 +94,16 @@ namespace GraduationProject.Infrastructure.Data.Repositories
             Insert(reviewDb);
         }
 
+        public async Task<ServiceResult<ReviewDTO>> GetStudentCourseReview(int courseId, int studentId)
+        {
+            var dto = await _dbSet.DTOProjection()
+                .FirstOrDefaultAsync(x => x.CourseId == courseId && x.UserId == studentId);
+
+            return dto != null
+                ? ServiceResult<ReviewDTO>.Success(dto, "Review retrieved successfully")
+                : ServiceResult<ReviewDTO>.Failure("Review not found");
+        }
+
         public int EditReview(int userId, EditReviewRequestModel review)
         {
             var reviewDb = _dbSet.Find(review.ReviewId);
@@ -105,7 +115,7 @@ namespace GraduationProject.Infrastructure.Data.Repositories
             {
                 throw new UnauthorizedAccessException("You are not authorized to edit this review");
             }
-            reviewDb.UpdateFromRequest(reviewDb.Content, review.Rating);
+            reviewDb.UpdateFromRequest(review.Content, review.Rating);
             return reviewDb.CourseId;
         }
 

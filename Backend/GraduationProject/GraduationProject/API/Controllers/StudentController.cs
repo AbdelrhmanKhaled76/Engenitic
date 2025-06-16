@@ -1,6 +1,8 @@
 ﻿using GraduationProject.API.Requests;
 using GraduationProject.API.Responses;
+using GraduationProject.API.Responses.ActionResult;
 using GraduationProject.Application.Services.Interfaces;
+using GraduationProject.Common.Extensions;
 using GraduationProject.Domain.DTOs;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -56,7 +58,7 @@ namespace GraduationProject.API.Controllers
                 return Ok(new SuccessResponse()
                 {
                     Message = "Courses Retrieved Successfully.",
-                    Data = new PaginatedResponse<EnrollmentDTO>(courses),
+                    Data = new PaginatedResponse(courses),
                     Code = HttpStatusCode.OK,
                 });
             }
@@ -141,20 +143,8 @@ namespace GraduationProject.API.Controllers
                     Code = HttpStatusCode.BadRequest,
                 });
 
-            var enrollmentStage = await _studentService.GetEnrollmentCurrentStage(enrollmentId, studentId);
-            if(!enrollmentStage.IsSuccess)
-                return BadRequest(new ErrorResponse()
-                {
-                    Message = enrollmentStage.Message,
-                    Code = HttpStatusCode.BadRequest,
-                });
-
-            return Ok(new SuccessResponse()
-            {
-                Message = "Current Stage Retrieved Successfully.",
-                Data = enrollmentStage.Data,
-                Code = HttpStatusCode.OK,
-            });
+            var res = await _studentService.GetEnrollmentCurrentStage(enrollmentId, studentId);
+            return res.ToActionResult();
         }
 
         // GET: /api/student/enrollment
@@ -176,20 +166,8 @@ namespace GraduationProject.API.Controllers
                     Code = HttpStatusCode.BadRequest,
                 });
 
-            var enrollmentStage = await _studentService.GetEnrollmentStage(enrollmentId, stage, studentId);
-            if (!enrollmentStage.IsSuccess)
-                return BadRequest(new ErrorResponse()
-                {
-                    Message = enrollmentStage.Message,
-                    Code = HttpStatusCode.BadRequest,
-                });
-
-            return Ok(new SuccessResponse()
-            {
-                Message = "Current Stage Retrieved Successfully.",
-                Data = enrollmentStage.Data,
-                Code = HttpStatusCode.OK,
-            });
+            var res = await _studentService.GetEnrollmentStage(enrollmentId, stage, studentId);
+            return res.ToActionResult();
         }
 
         // GET: /api/student/enrollment/attempt-quiz

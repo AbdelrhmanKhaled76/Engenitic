@@ -35,7 +35,7 @@ namespace GraduationProject.API.Responses
         public string Requirements { get; set; } = null!;
         public int Stages { get; set; }
         public bool IsEnrolled { get; set; } = false;
-        public ImageMetadata Image { get; set; }
+        public FileMetadata Image { get; set; }
         public RatingStatsDTO RatingStats { get; set; }
     }
 }

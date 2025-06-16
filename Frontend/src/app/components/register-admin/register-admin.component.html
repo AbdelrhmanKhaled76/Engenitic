@@ -1,0 +1,213 @@
+<section class="h-full w-full container pt-7">
+  <form
+    class="flex justify-between items-start flex-col h-full"
+    [formGroup]="registerForm"
+    (ngSubmit)="registerSubmit()"
+  >
+    <!-- image    -->
+    <div>
+      <input
+        placeholder="select an image"
+        type="file"
+        accept="image/*"
+        (change)="onFileChange($event)"
+        class="mb-3 custom-file-input font-display lowercase"
+        formControlName="image"
+      /><span class="font-regular font-normal ps-3">(optional)</span>
+    </div>
+    <div *ngIf="fileValidationError">
+      <p class="text-normal font-regular text-red-500">
+        {{ fileValidationError }}
+      </p>
+    </div>
+    <!-- email  -->
+    <input
+      #email
+      type="email"
+      class="engenitic-input my-3"
+      placeholder="  Email ..."
+      formControlName="email"
+    />
+    <div
+      *ngIf="
+        registerForm.get('email')?.errors &&
+        (registerForm.get('email')?.touched || email.value.length > 0)
+      "
+    >
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('email')?.getError('email')"
+      >
+        invalid email
+      </p>
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('email')?.getError('required')"
+      >
+        email field is required
+      </p>
+    </div>
+    <!-- user name -->
+    <input
+      #userName
+      type="text"
+      class="engenitic-input my-3"
+      placeholder="  User Name ..."
+      formControlName="userName"
+    />
+    <div
+      *ngIf="
+        registerForm.get('userName')?.errors &&
+        (registerForm.get('userName')?.touched || userName.value.length > 0)
+      "
+    >
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('userName')?.getError('required')"
+      >
+        user name field is required
+      </p>
+    </div>
+    <!-- password and repassword  -->
+    <input
+      #password
+      type="password"
+      class="engenitic-input my-3"
+      placeholder="  Password ..."
+      formControlName="password"
+    />
+    <div
+      *ngIf="
+        registerForm.get('password')?.errors &&
+        (registerForm.get('password')?.touched || password.value.length > 0)
+      "
+    >
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('password')?.getError('required')"
+      >
+        password field is required
+      </p>
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('password')?.getError('pattern')"
+      >
+        Password must contain at least:
+        <br />- One digit (0-9) <br />- One lowercase letter (a-z) <br />- One
+        uppercase letter (A-Z) <br />- One special character <br />- Minimum 6
+        characters
+      </p>
+    </div>
+    <input
+      #repassword
+      type="password"
+      class="engenitic-input my-3"
+      placeholder=" Confirm Password ..."
+      formControlName="repassword"
+    />
+    <div
+      *ngIf="
+        registerForm.get('repassword')?.errors &&
+        (registerForm.get('repassword')?.touched || repassword.value.length > 0)
+      "
+    >
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('repassword')?.getError('passwordMiss')"
+      >
+        passwords don't match !
+      </p>
+    </div>
+    <!-- country code and phone number  -->
+    <div
+      class="grid lg:grid-cols-4 my-3 gap-7 lg:gap-12 w-full"
+      formGroupName="phoneGroup"
+    >
+      <input
+        #countryCode
+        type="text"
+        id="country-code"
+        class="engenitic-input"
+        placeholder=" +20  (optional) "
+        formControlName="countryCode"
+      />
+      <input
+        #phoneNumber
+        type="tel"
+        class="engenitic-input lg:col-span-3"
+        placeholder="  Phone Number ...   (optional)"
+        formControlName="phone"
+      />
+    </div>
+    <div
+      *ngIf="
+        (registerForm.get('phone')?.errors ||
+          registerForm.get('countryCode')?.errors) &&
+        (registerForm.get('countryCode')?.touched ||
+          registerForm.get('phone')?.touched ||
+          countryCode.value.length > 0 ||
+          phoneNumber.value.length > 0)
+      "
+    >
+      <input
+        #countryCode
+        type="text"
+        id="country-code"
+        class="engenitic-input me-5"
+        placeholder="+20 (optional)"
+        formControlName="countryCode"
+      />
+      <input
+        #phoneNumber
+        type="tel"
+        class="engenitic-input col-span-3"
+        placeholder="Phone Number ... (optional)"
+        formControlName="phone"
+      />
+    </div>
+
+    <!-- Error Messages -->
+    <div
+      *ngIf="
+        registerForm.get('phoneGroup')?.errors &&
+        (registerForm.get('phoneGroup')?.touched ||
+          countryCode.value.length > 0 ||
+          phoneNumber.value.length > 0)
+      "
+    >
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('phoneGroup')?.hasError('phoneNumberMissing')"
+      >
+        Phone number is required if you filled the country code field.
+      </p>
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('phoneGroup')?.hasError('countryCodeMissing')"
+      >
+        Country code is required if you filled the phone number field.
+      </p>
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('phoneGroup')?.hasError('countryCodeInvalid')"
+      >
+        Country code must start with '+' and followed by a number.
+      </p>
+      <p
+        class="text-normal font-regular text-red-500"
+        *ngIf="registerForm.get('phoneGroup')?.hasError('phoneNumberInvalid')"
+      >
+        Phone number is invalid.
+      </p>
+    </div>
+
+    <!-- submit button  -->
+    <button
+      [disabled]="buttonDisabled"
+      type="submit"
+      class="engenitic-button hover:enginitic-main-color hover:text-white mt-2"
+    >
+      submit
+    </button>
+  </form>
+</section>

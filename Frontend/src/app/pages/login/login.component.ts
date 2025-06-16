@@ -1,4 +1,4 @@
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormGroup, FormControl, Validators } from '@angular/forms';
@@ -10,7 +10,7 @@ import { Subject, takeUntil } from 'rxjs';
 
 @Component({
   selector: 'app-login',
-  imports: [ReactiveFormsModule, CommonModule, ToastrModule],
+  imports: [ReactiveFormsModule, CommonModule, ToastrModule, RouterModule],
   templateUrl: './login.component.html',
   styleUrl: './login.component.scss',
 })
@@ -23,7 +23,7 @@ export class LoginComponent implements OnInit, OnDestroy {
   loginForm: FormGroup = new FormGroup({
     email: new FormControl('', [Validators.email, Validators.required]),
     password: new FormControl('', [
-      Validators.minLength(5),
+      Validators.minLength(6),
       Validators.required,
     ]),
     rememberMe: new FormControl(false, [Validators.required]),
@@ -72,6 +72,10 @@ export class LoginComponent implements OnInit, OnDestroy {
     localStorage.setItem('id', String(this.loginResponse.id));
     localStorage.setItem('role', this.loginResponse.roles[0]);
     localStorage.setItem('image_url', this.loginResponse.image.imageURL);
+    localStorage.setItem(
+      'isBanned',
+      this.loginResponse.banned ? 'true' : 'false'
+    );
 
     this.toastr.success(res.message);
     this._Router.navigate(['/home']);
@@ -117,6 +121,7 @@ export class LoginComponent implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
+          console.log(res);
           if (!res?.data) {
             this.toastr.error('Invalid response from server');
             this.buttonDisabled = false;

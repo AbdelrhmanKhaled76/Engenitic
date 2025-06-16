@@ -70,6 +70,11 @@ namespace GraduationProject.Migrations
                         .IsConcurrencyToken()
                         .HasColumnType("text");
 
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("timestamp with time zone")
+                        .HasDefaultValueSql("NOW()");
+
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(100)

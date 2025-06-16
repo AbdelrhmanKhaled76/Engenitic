@@ -5,12 +5,12 @@ import { ActivatedRoute } from '@angular/router';
 import {
   catchError,
   forkJoin,
+  map,
   of,
   Subject,
   switchMap,
   takeUntil,
   tap,
-  throwError,
 } from 'rxjs';
 import {
   FormArray,
@@ -22,7 +22,6 @@ import {
 import { MainCourse } from '../../interfaces/courses/main-course';
 import { Levels } from '../../interfaces/courses/levels';
 import { ToastrService } from 'ngx-toastr';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 
 export interface QuizSubmit {
   questionId: number;
@@ -47,6 +46,21 @@ export class MainCourseComponent implements OnInit, OnDestroy {
   quizFormGroup = new FormGroup({
     questions: new FormArray<any>([]),
   });
+  reviewForm: FormGroup = new FormGroup({
+    content: new FormControl('', [
+      Validators.required,
+      Validators.minLength(10),
+    ]),
+    rating: new FormControl(3, [
+      Validators.required,
+      Validators.min(1),
+      Validators.max(5),
+    ]),
+  });
+  hoveredRating = 0;
+  selectedRating = 0;
+
+  currentReview: FormGroup = new FormGroup({});
 
   constructor(
     private _ActivatedRoute: ActivatedRoute,
@@ -76,9 +90,20 @@ export class MainCourseComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: ({ stage, quizTitles }) => {
+          console.log(stage);
           this.mainCourseResponse = stage.data;
+          this.currentReview = new FormGroup({
+            content: new FormControl(
+              this.mainCourseResponse.reviewDTO?.content,
+              [Validators.required, Validators.minLength(10)]
+            ),
+            rating: new FormControl(this.mainCourseResponse.reviewDTO?.rating, [
+              Validators.required,
+              Validators.min(1),
+              Validators.max(5),
+            ]),
+          });
           this.creatingAnswers(this.mainCourseResponse);
-
           this.levelsTitles = quizTitles.data;
         },
         error: (err) => {
@@ -309,12 +334,14 @@ export class MainCourseComponent implements OnInit, OnDestroy {
                         'An error occurred on the server, try again later'
                       );
                     }
+                    this.displayQuiz = false;
                     return of(null);
                   })
                 );
             } else {
               // if failed
               this._ToastrService.error(res.message);
+              this.handleClosingQuiz();
               return of(null);
             }
           }),
@@ -333,5 +360,87 @@ export class MainCourseComponent implements OnInit, OnDestroy {
     } else {
       this.errorString = 'you must complete the quiz in order to submit';
     }
+  }
+
+  setRating(rating: number): void {
+    this.selectedRating = rating;
+    this.reviewForm.patchValue({ rating });
+  }
+
+  onSubmit(): void {
+    if (this.reviewForm.valid) {
+      this._CoursesService
+        .addReview({
+          courseId: this.courseId,
+          ...this.reviewForm.value,
+        })
+        .pipe(
+          takeUntil(this.destroy$),
+          tap((res) => this._ToastrService.success(res.message)),
+          tap((res) => (this.mainCourseResponse.reviewDTO = res.data)),
+          catchError((err) => {
+            this._ToastrService.error(
+              err.error.message || 'something went wrong try again'
+            );
+            return of(null);
+          })
+        )
+        .subscribe();
+    } else {
+      this.reviewForm.markAllAsTouched();
+    }
+  }
+
+  setEditRating(rating: number): void {
+    this.selectedRating = rating;
+    this.currentReview.patchValue({ rating });
+  }
+
+  updateReview(): void {
+    if (this.currentReview.valid) {
+      this._CoursesService
+        .editReview({
+          reviewId: this.mainCourseResponse.reviewDTO?.reviewId,
+          ...this.currentReview.value,
+        })
+        .pipe(takeUntil(this.destroy$))
+        .subscribe({
+          next: (res) => {
+            console.log({
+              reviewId: this.mainCourseResponse.reviewDTO?.reviewId,
+              ...this.currentReview.value,
+            });
+            this._ToastrService.success(
+              res.message || 'review is saved successfully'
+            );
+          },
+          error: (err) => {
+            this._ToastrService.error(
+              err.error.message || 'an error has occured'
+            );
+          },
+        });
+    } else {
+      this.currentReview.markAllAsTouched();
+    }
+  }
+
+  deleteReview(reviewId: number): void {
+    this._CoursesService
+      .deleteReview(reviewId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this._ToastrService.success(
+            res.message || 'review is deleted successfully'
+          );
+          this.mainCourseResponse.reviewDTO = null;
+        },
+        error: (err) => {
+          this._ToastrService.error(
+            err.error.message || 'an error has occured'
+          );
+        },
+      });
   }
 }

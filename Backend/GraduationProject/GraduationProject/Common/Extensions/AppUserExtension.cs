@@ -2,7 +2,6 @@
 using GraduationProject.Domain.DTOs;
 using GraduationProject.Domain.Enums;
 using GraduationProject.Domain.Models;
-using Microsoft.EntityFrameworkCore;
 
 namespace GraduationProject.Common.Extensions
 {
@@ -11,7 +10,6 @@ namespace GraduationProject.Common.Extensions
         public static IQueryable<AppUserDTO> DTOProjection(this IQueryable<AppUser> query)
         {
             return query
-                .Include(x => x.FileHashes)
                 .Select(x => new AppUserDTO
                 {
                     Id = x.Id,
@@ -22,6 +20,11 @@ namespace GraduationProject.Common.Extensions
                     Banned = x.Banned,
                     IsExternal = x.IsExternal,
                     IsEmailConfirmed = x.EmailConfirmed,
+                    CreatedAt = x.CreatedAt,
+                    Roles = x.Roles
+                        .OrderBy(x=> x.Id)
+                        .Select(r => r.Name)
+                        .ToList(),
                     Image = new()
                     {
                         ImageURL = x.FileHashes
@@ -35,6 +38,22 @@ namespace GraduationProject.Common.Extensions
                               .FirstOrDefault(),
                         Version = x.FileHashes
                                .Where(z => z.Type == CloudinaryType.UserImage)
+                              .Select(z => z.Version)
+                              .FirstOrDefault() ?? "1"
+                    },
+                    Cv = new()
+                    {
+                        ImageURL = x.FileHashes
+                              .Where(z => z.Type == CloudinaryType.InstructorCV)
+                              .Select(z => z.PublicId)
+                              .FirstOrDefault() ?? "",
+                        Name = "User Cv",
+                        Hash = x.FileHashes
+                              .Where(z => z.Type == CloudinaryType.InstructorCV)
+                              .Select(z => z.Hash)
+                              .FirstOrDefault(),
+                        Version = x.FileHashes
+                               .Where(z => z.Type == CloudinaryType.InstructorCV)
                               .Select(z => z.Version)
                               .FirstOrDefault() ?? "1"
                     }

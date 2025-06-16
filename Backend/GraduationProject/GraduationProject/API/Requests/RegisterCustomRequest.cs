@@ -1,8 +1,9 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using GraduationProject.Common.Constants;
+using System.ComponentModel.DataAnnotations;
 
 namespace GraduationProject.API.Requests
 {
-    public class RegisterCustomRequest
+    public class RegisterCustomRequest : IValidatableObject
     {
         [Required]
         [MaxLength(120)]
@@ -15,12 +16,12 @@ namespace GraduationProject.API.Requests
 
         [Required]
         [DataType(DataType.Password)]
-        [MinLength(5)]
+        [MinLength(6)]
         public string Password { get; set; } = null!;
 
         [Required]
         [DataType(DataType.Password)]
-        [MinLength(5)]
+        [MinLength(6)]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; } = null!;
 
@@ -35,5 +36,17 @@ namespace GraduationProject.API.Requests
         public string? PhoneRegion { get; set; }
 
         public IFormFile? Image { get; set; }
+
+        public IFormFile? Cv { get; set; }
+
+        public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
+        {
+            if (Role?.Equals(Roles.Instructor, StringComparison.OrdinalIgnoreCase) == true && Cv == null)
+            {
+                yield return new ValidationResult(
+                    "CV is required for Instructors.",
+                    new[] { nameof(Cv) });
+            }
+        }
     }
 }

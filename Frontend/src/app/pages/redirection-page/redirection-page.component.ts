@@ -1,4 +1,4 @@
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   interval,
@@ -10,8 +10,10 @@ import {
   catchError,
   throwError,
   pipe,
+  finalize,
 } from 'rxjs';
 import { CoursesService } from '../../feature/courses/courses.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-redirection-page',
@@ -20,7 +22,7 @@ import { CoursesService } from '../../feature/courses/courses.service';
   styleUrl: './redirection-page.component.scss',
 })
 export class RedirectionPageComponent implements OnInit, OnDestroy {
-  counter: number = 10;
+  counter: number = 5;
   subscription!: Subscription;
   userId!: number;
   newEmail!: string;
@@ -29,7 +31,9 @@ export class RedirectionPageComponent implements OnInit, OnDestroy {
 
   constructor(
     private _ActivatedRoute: ActivatedRoute,
-    private _CoursesService: CoursesService
+    private _CoursesService: CoursesService,
+    private _ToastrService: ToastrService,
+    private _Router: Router
   ) {}
 
   ngOnInit(): void {
@@ -52,7 +56,9 @@ export class RedirectionPageComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (response) => {
-          console.log('Email changed successfully', response);
+          console.log(response);
+          this._ToastrService.success('Email Changed Successfully !');
+          this._Router.navigate(['/home']);
         },
         error: (error) => {
           console.error('Failed to change email', error);
@@ -62,9 +68,10 @@ export class RedirectionPageComponent implements OnInit, OnDestroy {
     this.subscription = interval(1000)
       .pipe(takeUntil(this.destroy$))
       .subscribe(() => {
-        this.counter -= 1;
         if (this.counter === 0) {
           return;
+        } else {
+          this.counter -= 1;
         }
       });
   }

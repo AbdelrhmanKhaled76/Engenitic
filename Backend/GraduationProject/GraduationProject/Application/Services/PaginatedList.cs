@@ -1,8 +1,18 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System.Collections;
 
 namespace GraduationProject.Application.Services
 {
-    public class PaginatedList<T> : List<T>
+
+    public interface IPaginatedList : IList
+    {
+        int PageIndex { get; }
+        int TotalCount { get; }
+        int PageSize { get; }
+        int TotalPages { get; }
+    }
+
+    public class PaginatedList<T> : List<T>, IPaginatedList
     {
         public int PageIndex { get; private set; } // starting from 1
         public int PageSize { get; private set; }
@@ -56,6 +66,12 @@ namespace GraduationProject.Application.Services
             var items = source.Skip((pageIndex - 1) * pageSize).Take(pageSize).ToList();
 
             return new PaginatedList<T>(items, pageIndex, pageSize, totalCount);
+        }
+
+
+        public static PaginatedList<T> Create(IEnumerable<T> source, int pageIndex, int totalCount, int pageSize = 10)
+        {
+            return new PaginatedList<T>(source, pageIndex, pageSize, totalCount);
         }
     }
 }

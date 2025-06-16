@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
-import { Injectable, OnInit } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { BehaviorSubject, Observable, of } from 'rxjs';
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +16,8 @@ export class UserService {
   >(null);
 
   constructor(private _HttpClient: HttpClient) {}
+
+  // authintication
 
   registerData(value: any): Observable<any> {
     return this._HttpClient.post(
@@ -49,6 +51,27 @@ export class UserService {
       }
     );
   }
+
+  forgetPassword(value: { email: string }): Observable<any> {
+    return this._HttpClient.post(
+      `https://localhost/api/Authentication/forget-password`,
+      value
+    );
+  }
+
+  ResetPassword(value: {
+    email: string;
+    newPassword: string;
+    confirmPassword: string;
+    token: string;
+  }): Observable<any> {
+    return this._HttpClient.post(
+      `https://localhost/api/Authentication/reset-password`,
+      value
+    );
+  }
+
+  // profile data and update
 
   getProfileData(userId: number): Observable<any> {
     return this._HttpClient.get(`https://localhost/api/Users/profile`, {
@@ -99,6 +122,40 @@ export class UserService {
         oldPassword,
         newPassword,
       }
+    );
+  }
+
+  // Admin apis
+
+  getAllUsers(index: number): Observable<any> {
+    return this._HttpClient.get(`https://localhost/api/Admin/users`, {
+      params: {
+        index,
+      },
+    });
+  }
+
+  banUser(userId: number): Observable<any> {
+    return this._HttpClient.post(
+      `https://localhost/api/Admin/ban/${userId}`,
+      {}
+    );
+  }
+  unbanUser(userId: number): Observable<any> {
+    return this._HttpClient.post(
+      `https://localhost/api/Admin/unban/${userId}`,
+      {}
+    );
+  }
+
+  registerAdmin(value: any): Observable<any> {
+    return this._HttpClient.post(`https://localhost/api/admin/register`, value);
+  }
+
+  verifyInstructor(instructorId: number): Observable<any> {
+    return this._HttpClient.post(
+      `https://localhost/api/Admin/verify-instructor/${instructorId}`,
+      {}
     );
   }
 }

@@ -9,6 +9,7 @@ using GraduationProject.StartupConfigurations;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.Extensions.Options;
+using System.Linq;
 
 namespace GraduationProject.Infrastructure.Data.Repositories
 {
@@ -26,15 +27,25 @@ namespace GraduationProject.Infrastructure.Data.Repositories
             return _dbSet
                 .Include(x => x.Roles)
                 .Include(x => x.FileHashes)
-                .OrderBy(x=> x.FullName);
+                .OrderBy(x => x.Banned)
+                    .ThenBy(x=> x.FullName);
         }
 
         private async Task<PaginatedList<AppUserDTO>> GetUsersDTOPageAsync(int index)
         {
-            var query =  DefaultQuery()
+            var query = DefaultQuery()
                 .DTOProjection();
 
-            return await PaginatedList<AppUserDTO>.CreateAsync(query, index);
+            var lol = await query.ToListAsync();
+
+            var paginatedList = await PaginatedList<AppUserDTO>.CreateAsync(query, index);
+
+            return PaginatedList<AppUserDTO>
+                .Create(
+                    paginatedList.OrderBy(x=> x.Banned).ThenBy(x => x.Roles.First().ToLower()),
+                    paginatedList.PageIndex,
+                    paginatedList.TotalCount
+                );
         }
 
         public async Task<PaginatedList<AppUserDTO>> GetUsersInRolePage(int index, Role? role)
@@ -46,7 +57,7 @@ namespace GraduationProject.Infrastructure.Data.Repositories
                 .Where(x => x.Roles.Any(r => r.Id == role.Id))
                 .DTOProjection();
 
-            return await PaginatedList<AppUserDTO>.CreateAsync(query, index);
+            return  await PaginatedList<AppUserDTO>.CreateAsync(query, index);
 
         }
 

@@ -42,7 +42,7 @@ namespace GraduationProject.Application.Services
             try
             {
                 var enrollment = await _unitOfWork.EnrollmentRepo.ExistsAsync(studentId, courseId);
-                return ServiceResult<bool>.Success(enrollment);
+                return ServiceResult<bool>.Success(enrollment, "Enrollment exists");
             }
             catch 
             {
@@ -63,7 +63,7 @@ namespace GraduationProject.Application.Services
             enrollmentDTO.Course.Image.ImageURL = _cloudinaryService
                 .GetImageUrl(enrollmentDTO.Course.Image.ImageURL, enrollmentDTO.Course.Image.Version);
 
-            return ServiceResult<EnrollmentDTO>.Success(enrollmentDTO);
+            return ServiceResult<EnrollmentDTO>.Success(enrollmentDTO, "Enrollment is retrieved successfully.");
         }
 
         public async Task<ServiceResult<StageResponse>> GetEnrollmentStage(int enrollmentId, int stage, int studentId)
@@ -77,9 +77,11 @@ namespace GraduationProject.Application.Services
 
                 float progress = GetProgress(enrollment);
                 var quiz = await GetQuizForStage(enrollment.CourseId, stage);
+                var courseReviewRes = await _unitOfWork.ReviewRepository.GetStudentCourseReview(enrollment.CourseId, studentId);
 
                 if (quiz.TryGetData(out var quizData))
-                    return ServiceResult<StageResponse>.Success(new StageResponse(quizData, enrollment.CurrentStage, progress));
+                    return ServiceResult<StageResponse>.Success(new StageResponse(courseReviewRes.Data, quizData, enrollment.CurrentStage, progress),
+                        "Stage retrieved successfully");
                 else
                     return ServiceResult<StageResponse>.Failure(quiz.Message);
             }
@@ -96,9 +98,11 @@ namespace GraduationProject.Application.Services
             {
                 float progress = GetProgress(enrollment);
                 var quiz =  await GetQuizForStage(enrollment.CourseId, enrollment.CurrentStage);
+                var courseReviewRes = await _unitOfWork.ReviewRepository.GetStudentCourseReview(enrollment.CourseId, studentId);
 
                 if (quiz.TryGetData(out var quizData))
-                    return ServiceResult<StageResponse>.Success(new StageResponse(quizData, enrollment.CurrentStage, progress));
+                    return ServiceResult<StageResponse>.Success(new StageResponse(courseReviewRes.Data, quizData, enrollment.CurrentStage, progress),
+                        "Stage retrieved Successfully");
                 else
                     return ServiceResult<StageResponse>.Failure(quiz.Message);
             }
@@ -124,7 +128,7 @@ namespace GraduationProject.Application.Services
                 enrollment.CurrentStage = 1;
                 await _unitOfWork.SaveChangesAsync();
             }            
-            return ServiceResult<UserEnrollment>.Success(enrollment);
+            return ServiceResult<UserEnrollment>.Success(enrollment, "Enrollment retrieved Successfully");
         }
 
         // Helper method
@@ -135,7 +139,7 @@ namespace GraduationProject.Application.Services
             if (quizDTO == null)
                 return ServiceResult<QuizDTO>.Failure("Quiz not found");
 
-            return ServiceResult<QuizDTO>.Success(quizDTO);
+            return ServiceResult<QuizDTO>.Success(quizDTO, "Quiz retrieved Successfully");
         }
 
         private float GetProgress(UserEnrollment enrollment)
@@ -185,7 +189,7 @@ namespace GraduationProject.Application.Services
                         userEnrollment.CurrentStage++;
                     await _unitOfWork.SaveChangesAsync();
                 }
-                return ServiceResult<UserQuizAttemptDTO>.Success(quizAttempt);
+                return ServiceResult<UserQuizAttemptDTO>.Success(quizAttempt, "Quiz Attempted Succssfully");
             }
             else
             {

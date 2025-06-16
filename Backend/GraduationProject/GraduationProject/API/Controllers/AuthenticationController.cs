@@ -1,15 +1,13 @@
 ﻿using GraduationProject.API.Requests;
-using GraduationProject.API.Responses;
+using GraduationProject.API.Responses.ActionResult;
 using GraduationProject.Application.Services;
 using GraduationProject.Application.Services.Interfaces;
+using GraduationProject.Common.Extensions;
 using GraduationProject.Domain.DTOs;
 using GraduationProject.StartupConfigurations;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Session;
 using Microsoft.Extensions.Options;
-using Microsoft.IdentityModel.Tokens;
-using System.Security.Claims;
+
 
 namespace GraduationProject.API.Controllers
 {
@@ -31,12 +29,6 @@ namespace GraduationProject.API.Controllers
         //[EnableRateLimiting("UserLoginRateLimit")]
         public async Task<IActionResult> Login(LoginCustomRequest model)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(new ErrorResponse()
-                {
-                    Code = System.Net.HttpStatusCode.BadRequest,
-                    Message = string.Join('/', ModelState.Values.SelectMany(x => x.Errors).Select(x => x.ErrorMessage)),
-                });
             try
             {
 
@@ -83,24 +75,18 @@ namespace GraduationProject.API.Controllers
 
                     return Ok(new SuccessResponse()
                     {
-                        Code = System.Net.HttpStatusCode.OK,
                         Data = data.LoginResponse,
                         Message = "User logged in successfully."
                     });
 
                 }
                 else
-                    return BadRequest(new ErrorResponse()
-                    {
-                        Code = System.Net.HttpStatusCode.BadRequest,
-                        Message = res.Message ?? "Couldn't login user."
-                    });
+                    return res.ToActionResult();
             }
             catch
             {
                 return BadRequest(new ErrorResponse()
                 {
-                    Code = System.Net.HttpStatusCode.BadRequest,
                     Message = "Couldn't login user."
                 });
             }
@@ -123,7 +109,6 @@ namespace GraduationProject.API.Controllers
                 if (!res.TryGetData(out var data))
                     return Ok(new SuccessResponse()
                     {
-                        Code = System.Net.HttpStatusCode.OK,
                         Message = "User logged out successfully."
                     });
 
@@ -147,14 +132,12 @@ namespace GraduationProject.API.Controllers
 
                 return Ok(new SuccessResponse()
                 {
-                    Code = System.Net.HttpStatusCode.OK,
                     Message = "User logged out successfully."
                 });
             }
             else
                 return Ok(new SuccessResponse()
                 {
-                    Code = System.Net.HttpStatusCode.OK,
                     Message = "User logged out successfully."
                 });
         }
@@ -164,56 +147,23 @@ namespace GraduationProject.API.Controllers
         public async Task<IActionResult> Register([FromForm] RegisterCustomRequest model)
         {
 
-            if (!ModelState.IsValid)
-                return BadRequest(new ErrorResponse()
-                {
-                    Code = System.Net.HttpStatusCode.BadRequest,
-                    Message = ModelState,
-                });
-
             model.Role = model.Role.ToLower();
             if (model.Role != "instructor" && model.Role != "student")
                 return BadRequest(new ErrorResponse()
                 {
-                    Code = System.Net.HttpStatusCode.BadRequest,
                     Message = "Role must be either 'instructor' or 'student'."
                 });
 
 
             var res = await _authenticationService.Register(model, false);
-            if (res.IsSuccess)
-                return Ok(new SuccessResponse()
-                {
-                    Code = System.Net.HttpStatusCode.OK,
-                    Data = res.Data,
-                    Message = "User registered successfully."
-                });
-            else
-                return BadRequest(new ErrorResponse()
-                {
-                    Code = System.Net.HttpStatusCode.BadRequest,
-                    Message = res.Message ?? "Couldn't register user."
-                });
-
+            return res.ToActionResult();
         }
 
         [HttpPost("forget-password")]
         public async Task<IActionResult> ForgetPassword(ForgetPasswordRequest model)
         {
             var res = await _authenticationService.ForgetPassword(model);
-            if (res.IsSuccess)
-                return Ok(new SuccessResponse()
-                {
-                    Code = System.Net.HttpStatusCode.OK,
-                    Data = res.Data,
-                    Message = res.Message
-                });
-            else
-                return BadRequest(new ErrorResponse()
-                {
-                    Code = System.Net.HttpStatusCode.BadRequest,
-                    Message = res.Message
-                });
+            return res.ToActionResult();
 
         }
 
@@ -221,20 +171,9 @@ namespace GraduationProject.API.Controllers
         public async Task<IActionResult> ResetPassword(ResetPasswordRequest model)
         {
             var res = await _authenticationService.ResetPassword(model);
-            if (res.IsSuccess)
-                return Ok(new SuccessResponse()
-                {
-                    Code = System.Net.HttpStatusCode.OK,
-                    Data = res.Data,
-                    Message = res.Message
-                });
-            else
-                return BadRequest(new ErrorResponse()
-                {
-                    Code = System.Net.HttpStatusCode.BadRequest,
-                    Message = res.Message
-                });
+            return res.ToActionResult();
         }
+
     }
 }
 
